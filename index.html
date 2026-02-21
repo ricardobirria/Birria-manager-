@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birria Manager</title>
+
+<style>
+body{
+ font-family: Arial;
+ margin:0;
+ background:#121212;
+ color:white;
+}
+
+.header{
+ background:#8B0000;
+ padding:15px;
+ text-align:center;
+ font-size:24px;
+ font-weight:bold;
+}
+
+.container{
+ padding:15px;
+}
+
+button{
+ padding:15px;
+ margin:5px;
+ font-size:18px;
+ border:none;
+ border-radius:10px;
+}
+
+.product{
+ background:#1f1f1f;
+ color:white;
+}
+
+.total{
+ font-size:24px;
+ margin-top:10px;
+}
+
+.status{
+ margin-top:10px;
+ font-size:18px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="header">🌮 Birria Manager</div>
+
+<div class="container">
+
+<input id="cliente" placeholder="Nombre cliente" style="padding:10px;font-size:18px;width:100%;">
+
+<h3>Productos</h3>
+
+<button class="product" onclick="add(40)">Taco $40</button>
+<button class="product" onclick="add(60)">Quesabirria $60</button>
+<button class="product" onclick="add(20)">Consomé $20</button>
+<button class="product" onclick="add(120)">Birriamen $120</button>
+<button class="product" onclick="add(120)">Media orden $120</button>
+
+<h3>Combos</h3>
+
+<button class="product" onclick="add(110)">Taquisa $110</button>
+<button class="product" onclick="add(120)">Quesalover $120</button>
+<button class="product" onclick="add(220)">Hambreado $220</button>
+
+<div class="total">
+Total: $<span id="total">0</span>
+</div>
+
+<div class="status">
+Estado: <span id="estado">Pendiente</span>
+</div>
+
+<br>
+
+<button onclick="cobrar('Efectivo')">Cobrar Efectivo</button>
+<button onclick="cobrar('Transferencia')">Cobrar Transferencia</button>
+<button onclick="reset()">Nueva cuenta</button>
+
+</div>
+
+<script>
+
+let total = 0;
+
+function add(precio){
+ total += precio;
+ document.getElementById("total").innerText = total;
+}
+
+function cobrar(metodo){
+ alert("Pagado con " + metodo + " — Total $" + total);
+ document.getElementById("estado").innerText = "Pagado";
+}
+
+function reset(){
+ total = 0;
+ document.getElementById("total").innerText = total;
+ document.getElementById("estado").innerText = "Pendiente";
+ document.getElementById("cliente").value = "";
+}
+
+</script>
+
+</body>
+</html>
