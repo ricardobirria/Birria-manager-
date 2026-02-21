@@ -7,85 +7,102 @@
 <style>
 
 body{
- font-family: Arial, sans-serif;
  margin:0;
- background:#0d0d0d;
- color:white;
+ font-family:Arial, sans-serif;
+ background:#2b1d16;
+ color:#fff;
 }
 
 .header{
- background:#8B0000;
+ background:#6b2e1a;
  padding:15px;
  text-align:center;
- font-size:22px;
+ font-size:24px;
  font-weight:bold;
 }
 
-.container{
- padding:10px;
+.main{
+ display:flex;
+ height:calc(100vh - 60px);
+}
+
+.left{
+ flex:2;
+ padding:15px;
+}
+
+.right{
+ flex:1;
+ background:#f4e6d0;
+ color:#222;
+ padding:15px;
 }
 
 .tabs{
  display:flex;
- overflow-x:auto;
+ gap:5px;
  margin-bottom:10px;
 }
 
 .tab{
- background:#1c1c1c;
+ background:#4a2b20;
  padding:10px 15px;
- margin-right:5px;
- border-radius:10px;
+ border-radius:8px;
  cursor:pointer;
 }
 
 .active{
- background:#b30000;
+ background:#b5522c;
+}
+
+input{
+ padding:10px;
+ font-size:16px;
+ width:60%;
+ border-radius:6px;
+ border:none;
+ margin-bottom:10px;
 }
 
 .products{
  display:grid;
- grid-template-columns:1fr 1fr;
+ grid-template-columns:repeat(4,1fr);
  gap:10px;
 }
 
 button{
- padding:18px;
+ padding:20px;
  font-size:18px;
  border:none;
- border-radius:12px;
+ border-radius:10px;
+ cursor:pointer;
 }
 
-.product{
- background:#1f1f1f;
- color:white;
-}
+.taco{background:#e67e22;}
+.quesa{background:#27ae60;}
+.consome{background:#d35400;}
+.combo{background:#8e5a2b;}
+.accion{background:#27ae60;color:white;width:100%;margin-top:10px;}
+.eliminar{background:#c0392b;color:white;width:100%;margin-top:10px;}
+.historial{background:#34495e;color:white;width:100%;margin-top:10px;}
 
-.actions{
- background:#b30000;
- color:white;
+.lista{
+ background:white;
+ color:black;
+ padding:10px;
+ border-radius:8px;
+ min-height:200px;
 }
 
 .total{
- font-size:32px;
+ font-size:24px;
  font-weight:bold;
- text-align:center;
- margin:10px 0;
-}
-
-.ticket{
- background:#1c1c1c;
- padding:15px;
- border-radius:12px;
  margin-top:10px;
 }
 
 .login{
  position:fixed;
- top:0;
- left:0;
- right:0;
- bottom:0;
+ inset:0;
  background:black;
  display:flex;
  justify-content:center;
@@ -93,18 +110,7 @@ button{
  flex-direction:column;
 }
 
-.hidden{
- display:none;
-}
-
-input{
- padding:12px;
- font-size:18px;
- border-radius:10px;
- border:none;
- width:100%;
- margin-bottom:10px;
-}
+.hidden{display:none;}
 
 </style>
 
@@ -119,36 +125,50 @@ input{
 
 <div id="app" class="hidden">
 
-<div class="header">🌮 Birria Manager</div>
+<div class="header">Cobro Birria</div>
 
-<div class="container">
+<div class="main">
 
-<input id="cliente" placeholder="Nombre cliente">
+<div class="left">
 
 <div class="tabs" id="tabs"></div>
 
+<input id="cliente" placeholder="Nombre del cliente">
+
 <div class="products">
 
-<button class="product" onclick="add(40)">Taco $40</button>
-<button class="product" onclick="add(60)">Quesabirria $60</button>
-<button class="product" onclick="add(20)">Consomé $20</button>
-<button class="product" onclick="add(120)">Birriamen $120</button>
-<button class="product" onclick="add(120)">Media orden $120</button>
-<button class="product" onclick="add(110)">Taquisa $110</button>
-<button class="product" onclick="add(120)">Quesalover $120</button>
-<button class="product" onclick="add(220)">Hambreado $220</button>
+<button class="taco" onclick="add('Taco',40)">Taco $40</button>
+<button class="quesa" onclick="add('Quesabirria',60)">Quesabirria $60</button>
+<button class="consome" onclick="add('Consomé',20)">Consomé $20</button>
+<button class="combo" onclick="add('Birriamen',120)">Birriamen $120</button>
+
+<button class="combo" onclick="add('Media Orden',120)">Media Orden $120</button>
+<button class="combo" onclick="add('Taquisa',110)">Taquisa $110</button>
+<button class="combo" onclick="add('Quesalover',120)">Quesalover $120</button>
+<button class="combo" onclick="add('Hambreado',220)">Hambreado $220</button>
 
 </div>
+
+<button onclick="nuevaCuenta()">+ Nueva Cuenta</button>
+
+</div>
+
+<div class="right">
+
+<h3>Pedido</h3>
+
+<div id="lista" class="lista"></div>
 
 <div class="total">
-$<span id="total">0</span>
+Total: $<span id="total">0</span><br>
+Artículos: <span id="articulos">0</span>
 </div>
 
-<button class="actions" onclick="nuevaCuenta()">Nueva Cuenta</button>
-<button class="actions" onclick="cobrar('Efectivo')">Efectivo</button>
-<button class="actions" onclick="cobrar('Transferencia')">Transferencia</button>
+<button class="eliminar" onclick="eliminarCuenta()">Eliminar</button>
+<button class="accion" onclick="cobrar()">Cobrar</button>
+<button class="historial" onclick="verHistorial()">Ver Ventas del Día</button>
 
-<div id="ticket" class="ticket hidden"></div>
+</div>
 
 </div>
 
@@ -156,39 +176,32 @@ $<span id="total">0</span>
 
 <script>
 
-let PASSWORD = "1234";
+let PASSWORD="1234";
 
-let cuentas = [];
-let cuentaActual = null;
+let cuentas=[];
+let actual=null;
 
 function login(){
-
- let p = document.getElementById("pass").value;
-
- if(p === PASSWORD){
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").classList.remove("hidden");
- }else{
-  alert("Contraseña incorrecta");
+ if(document.getElementById("pass").value===PASSWORD){
+  loginDiv.style.display="none";
+  app.classList.remove("hidden");
  }
-
 }
 
 function nuevaCuenta(){
 
- let nombre = document.getElementById("cliente").value || "Cliente";
+ let nombre=document.getElementById("cliente").value||"Cliente";
 
- let cuenta = {
+ cuentas.push({
   nombre:nombre,
+  items:{},
   total:0
- };
+ });
 
- cuentas.push(cuenta);
-
- cuentaActual = cuentas.length-1;
+ actual=cuentas.length-1;
 
  renderTabs();
- actualizar();
+ render();
 }
 
 function renderTabs(){
@@ -196,76 +209,106 @@ function renderTabs(){
  let html="";
 
  cuentas.forEach((c,i)=>{
-
-  html += `<div class="tab ${i===cuentaActual?'active':''}" onclick="cambiar(${i})">
-  ${c.nombre} $${c.total}
-  </div>`;
-
+  html+=`<div class="tab ${i===actual?'active':''}" onclick="cambiar(${i})">${c.nombre}</div>`;
  });
 
- document.getElementById("tabs").innerHTML = html;
+ tabs.innerHTML=html;
 }
 
 function cambiar(i){
-
- cuentaActual=i;
- actualizar();
+ actual=i;
+ document.getElementById("cliente").value=cuentas[i].nombre;
+ render();
  renderTabs();
 }
 
-function add(precio){
+function add(nombre,precio){
 
- if(cuentaActual===null){
-  alert("Primero crea cuenta");
-  return;
+ if(actual===null) return;
+
+ let c=cuentas[actual];
+
+ if(!c.items[nombre]){
+  c.items[nombre]={cantidad:0,precio:precio};
  }
 
- cuentas[cuentaActual].total += precio;
+ c.items[nombre].cantidad++;
 
- actualizar();
- renderTabs();
+ c.total+=precio;
+
+ render();
 }
 
-function actualizar(){
+function render(){
 
- if(cuentaActual!==null){
-  document.getElementById("total").innerText = cuentas[cuentaActual].total;
+ if(actual===null) return;
+
+ let c=cuentas[actual];
+
+ cliente.value=c.nombre;
+
+ let html="";
+ let totalArt=0;
+
+ for(let k in c.items){
+
+  let item=c.items[k];
+
+  totalArt+=item.cantidad;
+
+  html+=`${item.cantidad} ${k} - $${item.cantidad*item.precio}<br>`;
  }
 
+ lista.innerHTML=html;
+
+ total.innerText=c.total;
+ articulos.innerText=totalArt;
 }
 
-function cobrar(metodo){
+function eliminarCuenta(){
 
- if(cuentaActual===null) return;
+ if(actual===null) return;
 
- let c = cuentas[cuentaActual];
+ cuentas.splice(actual,1);
 
- mostrarTicket(c.nombre,metodo,c.total);
-
- cuentas.splice(cuentaActual,1);
-
- cuentaActual=null;
+ actual=null;
 
  renderTabs();
-
- document.getElementById("total").innerText = 0;
-
+ lista.innerHTML="";
+ total.innerText=0;
+ articulos.innerText=0;
 }
 
-function mostrarTicket(cliente,metodo,total){
+function cobrar(){
 
- let div = document.getElementById("ticket");
+ if(actual===null) return;
 
- div.innerHTML = `
-  <h3>🧾 Ticket</h3>
-  Cliente: ${cliente}<br>
-  Total: $${total}<br>
-  Pago: ${metodo}<br>
-  ✅ Gracias por su compra
- `;
+ let c=cuentas[actual];
 
- div.classList.remove("hidden");
+ let ventas=JSON.parse(localStorage.getItem("ventas")||"[]");
 
+ ventas.push({
+  nombre:c.nombre,
+  total:c.total,
+  fecha:new Date().toLocaleString()
+ });
+
+ localStorage.setItem("ventas",JSON.stringify(ventas));
+
+ eliminarCuenta();
+}
+
+function verHistorial(){
+
+ let ventas=JSON.parse(localStorage.getItem("ventas")||"[]");
+
+ let txt="Ventas del día:\n\n";
+
+ ventas.forEach(v=>{
+  txt+=`${v.nombre} - $${v.total}\n`;
+ });
+
+ alert(txt);
 }
 
 </script>
