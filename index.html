@@ -9,34 +9,48 @@
 body{
  font-family: Arial, sans-serif;
  margin:0;
- background:#0f0f0f;
+ background:#0d0d0d;
  color:white;
 }
 
 .header{
- background:linear-gradient(90deg,#8B0000,#b30000);
+ background:#8B0000;
  padding:15px;
  text-align:center;
- font-size:24px;
+ font-size:22px;
  font-weight:bold;
 }
 
 .container{
- padding:15px;
+ padding:10px;
 }
 
-input{
- padding:12px;
- font-size:18px;
- width:100%;
- border-radius:10px;
- border:none;
+.tabs{
+ display:flex;
+ overflow-x:auto;
  margin-bottom:10px;
 }
 
+.tab{
+ background:#1c1c1c;
+ padding:10px 15px;
+ margin-right:5px;
+ border-radius:10px;
+ cursor:pointer;
+}
+
+.active{
+ background:#b30000;
+}
+
+.products{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px;
+}
+
 button{
- padding:15px;
- margin:5px;
+ padding:18px;
  font-size:18px;
  border:none;
  border-radius:12px;
@@ -45,35 +59,25 @@ button{
 .product{
  background:#1f1f1f;
  color:white;
- width:48%;
 }
 
 .actions{
- background:#8B0000;
+ background:#b30000;
  color:white;
- width:48%;
 }
 
 .total{
- font-size:28px;
- margin-top:10px;
+ font-size:32px;
  font-weight:bold;
-}
-
-.status{
- margin-top:10px;
- font-size:18px;
+ text-align:center;
+ margin:10px 0;
 }
 
 .ticket{
  background:#1c1c1c;
  padding:15px;
  border-radius:12px;
- margin-top:15px;
-}
-
-.hidden{
- display:none;
+ margin-top:10px;
 }
 
 .login{
@@ -82,11 +86,24 @@ button{
  left:0;
  right:0;
  bottom:0;
- background:#000;
+ background:black;
  display:flex;
  justify-content:center;
  align-items:center;
  flex-direction:column;
+}
+
+.hidden{
+ display:none;
+}
+
+input{
+ padding:12px;
+ font-size:18px;
+ border-radius:10px;
+ border:none;
+ width:100%;
+ margin-bottom:10px;
 }
 
 </style>
@@ -108,33 +125,28 @@ button{
 
 <input id="cliente" placeholder="Nombre cliente">
 
-<h3>Productos</h3>
+<div class="tabs" id="tabs"></div>
+
+<div class="products">
 
 <button class="product" onclick="add(40)">Taco $40</button>
 <button class="product" onclick="add(60)">Quesabirria $60</button>
 <button class="product" onclick="add(20)">Consomé $20</button>
 <button class="product" onclick="add(120)">Birriamen $120</button>
 <button class="product" onclick="add(120)">Media orden $120</button>
-
-<h3>Combos</h3>
-
 <button class="product" onclick="add(110)">Taquisa $110</button>
 <button class="product" onclick="add(120)">Quesalover $120</button>
 <button class="product" onclick="add(220)">Hambreado $220</button>
 
+</div>
+
 <div class="total">
-Total: $<span id="total">0</span>
+$<span id="total">0</span>
 </div>
 
-<div class="status">
-Estado: <span id="estado">Pendiente</span>
-</div>
-
-<br>
-
+<button class="actions" onclick="nuevaCuenta()">Nueva Cuenta</button>
 <button class="actions" onclick="cobrar('Efectivo')">Efectivo</button>
 <button class="actions" onclick="cobrar('Transferencia')">Transferencia</button>
-<button class="actions" onclick="reset()">Nueva</button>
 
 <div id="ticket" class="ticket hidden"></div>
 
@@ -144,8 +156,10 @@ Estado: <span id="estado">Pendiente</span>
 
 <script>
 
-let total = 0;
-let PASSWORD = "1234"; // ← puedes cambiarla
+let PASSWORD = "1234";
+
+let cuentas = [];
+let cuentaActual = null;
 
 function login(){
 
@@ -160,29 +174,81 @@ function login(){
 
 }
 
+function nuevaCuenta(){
+
+ let nombre = document.getElementById("cliente").value || "Cliente";
+
+ let cuenta = {
+  nombre:nombre,
+  total:0
+ };
+
+ cuentas.push(cuenta);
+
+ cuentaActual = cuentas.length-1;
+
+ renderTabs();
+ actualizar();
+}
+
+function renderTabs(){
+
+ let html="";
+
+ cuentas.forEach((c,i)=>{
+
+  html += `<div class="tab ${i===cuentaActual?'active':''}" onclick="cambiar(${i})">
+  ${c.nombre} $${c.total}
+  </div>`;
+
+ });
+
+ document.getElementById("tabs").innerHTML = html;
+}
+
+function cambiar(i){
+
+ cuentaActual=i;
+ actualizar();
+ renderTabs();
+}
+
 function add(precio){
- total += precio;
- document.getElementById("total").innerText = total;
+
+ if(cuentaActual===null){
+  alert("Primero crea cuenta");
+  return;
+ }
+
+ cuentas[cuentaActual].total += precio;
+
+ actualizar();
+ renderTabs();
+}
+
+function actualizar(){
+
+ if(cuentaActual!==null){
+  document.getElementById("total").innerText = cuentas[cuentaActual].total;
+ }
+
 }
 
 function cobrar(metodo){
 
- document.getElementById("estado").innerText = "Pagado";
+ if(cuentaActual===null) return;
 
- let cliente = document.getElementById("cliente").value;
+ let c = cuentas[cuentaActual];
 
- let ventas = JSON.parse(localStorage.getItem("ventas") || "[]");
+ mostrarTicket(c.nombre,metodo,c.total);
 
- ventas.push({
- cliente: cliente,
- total: total,
- metodo: metodo,
- fecha: new Date().toLocaleDateString()
- });
+ cuentas.splice(cuentaActual,1);
 
- localStorage.setItem("ventas", JSON.stringify(ventas));
+ cuentaActual=null;
 
- mostrarTicket(cliente,metodo,total);
+ renderTabs();
+
+ document.getElementById("total").innerText = 0;
 
 }
 
@@ -200,14 +266,6 @@ function mostrarTicket(cliente,metodo,total){
 
  div.classList.remove("hidden");
 
-}
-
-function reset(){
- total = 0;
- document.getElementById("total").innerText = total;
- document.getElementById("estado").innerText = "Pendiente";
- document.getElementById("cliente").value = "";
- document.getElementById("ticket").classList.add("hidden");
 }
 
 </script>
