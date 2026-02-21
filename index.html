@@ -1,262 +1,285 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Birria Manager</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birria Manager PRO</title>
 <style>
+
 body{
 font-family: Arial, sans-serif;
-background:#f4f6f8;
 margin:0;
-padding:10px;
-}
-
-h1{
-text-align:center;
-color:#8B0000;
-}
-
-.container{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-.panel{
-background:white;
-padding:10px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-button{
-padding:10px;
-margin:4px;
-border:none;
-border-radius:8px;
-background:#8B0000;
+background:#2b2b2b;
 color:white;
-font-weight:bold;
-cursor:pointer;
 }
 
-button:hover{
-background:#a30000;
+.header{
+background:#7a1e1e;
+padding:15px;
+text-align:center;
+font-size:24px;
+font-weight:bold;
+}
+
+.main{
+display:flex;
+height:calc(100vh - 60px);
+}
+
+.left{
+width:60%;
+padding:10px;
+display:flex;
+flex-wrap:wrap;
+align-content:flex-start;
+overflow:auto;
+}
+
+.right{
+width:40%;
+background:#3a3a3a;
+padding:15px;
+display:flex;
+flex-direction:column;
 }
 
 .product{
-background:#eee;
+width:30%;
+margin:1%;
+padding:20px;
+border-radius:12px;
+font-size:18px;
+font-weight:bold;
+border:none;
+color:white;
+cursor:pointer;
 }
 
-.client{
-border:2px solid #ddd;
-padding:8px;
-margin-bottom:8px;
-border-radius:8px;
-}
+.taco{background:#c0392b;}
+.quesa{background:#d35400;}
+.consome{background:#16a085;}
+.ramen{background:#8e44ad;}
+.media{background:#2980b9;}
+.combo{background:#f39c12;}
 
-.paid{
-border-color:green;
-background:#f0fff0;
+.ticket{
+flex:1;
+background:#222;
+border-radius:10px;
+padding:10px;
+overflow:auto;
+margin-top:10px;
 }
 
 .total{
-font-size:18px;
+font-size:26px;
+margin-top:10px;
 font-weight:bold;
-color:#8B0000;
 }
 
-.small{
-font-size:12px;
-color:#555;
+button{
+padding:12px;
+margin-top:5px;
+border:none;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+}
+
+.pay{
+background:#27ae60;
+color:white;
+}
+
+.transfer{
+background:#3498db;
+color:white;
+}
+
+.clear{
+background:#c0392b;
+color:white;
+}
+
+.tabs{
+display:flex;
+overflow:auto;
+margin-bottom:10px;
+}
+
+.tab{
+background:#555;
+padding:8px 12px;
+border-radius:8px;
+margin-right:5px;
+cursor:pointer;
+}
+
+.active{
+background:#f39c12;
 }
 
 input{
-padding:6px;
-border-radius:6px;
-border:1px solid #ccc;
+padding:10px;
+font-size:16px;
+border-radius:8px;
+border:none;
+width:100%;
 }
+
+.item{
+display:flex;
+justify-content:space-between;
+margin:5px 0;
+}
+
+.historyBtn{
+background:#9b59b6;
+color:white;
+margin-top:5px;
+}
+
 </style>
 </head>
-
 <body>
-
-<h1>🌮 Birria Manager</h1>
-
-<div class="container">
-
-<div class="panel">
-
-<h3>Nuevo Cliente</h3>
-
-<input id="clientName" placeholder="Nombre cliente">
-<button onclick="addClient()">Agregar</button>
-
-<h3>Productos</h3>
-
-<button class="product" onclick="addItem('Taco',40)">Taco $40</button>
-<button class="product" onclick="addItem('Quesabirria',60)">Quesabirria $60</button>
-<button class="product" onclick="addItem('Consomé',20)">Consomé $20</button>
-<button class="product" onclick="addItem('Birriamen',120)">Birriamen $120</button>
-<button class="product" onclick="addItem('Media Orden',120)">Media Orden $120</button>
-
-<h3>Combos</h3>
-
-<button onclick="addItem('Taquisa',110)">Taquisa $110</button>
-<button onclick="addItem('Quesalover',120)">Quesalover $120</button>
-<button onclick="addItem('Hambreado',220)">Hambreado $220</button>
+<div class="header">🌮 Birria Manager PRO</div>
+<div class="main">
+<div class="left">
 
 </div>
-
-<div class="panel" style="flex:1">
-
-<h3>Clientes</h3>
-<div id="clients"></div>
-
+<div class="right">
+<div class="tabs" id="tabs"></div>
+<input id="clienteNombre" placeholder="Nombre del cliente">
+<div class="ticket" id="ticket"></div>
+<div class="total">
+Total: $<span id="total">0</span>
+</div>
 </div>
 
 </div>
-
-<div class="panel">
-<h3>Historial</h3>
-<button onclick="clearHistory()">Borrar historial del día</button>
-<div id="history"></div>
-</div>
-
 <script>
 
-let clients = []
-let selectedClient = null
+let cuentas = [];
+let cuentaActiva = 0;
 
-function saveData(){
-localStorage.setItem("birriaClients",JSON.stringify(clients))
-}
-
-function loadData(){
-let data = localStorage.getItem("birriaClients")
-if(data) clients = JSON.parse(data)
-render()
-renderHistory()
-}
-
-function addClient(){
-let name = document.getElementById("clientName").value
-if(!name) return
-
-clients.push({
-name,
+function nuevaCuenta(){
+let cuenta = {
+cliente:"",
 items:[],
-total:0,
-paid:false,
-method:"",
-date:new Date().toLocaleDateString()
-})
-
-document.getElementById("clientName").value=""
-saveData()
-render()
+total:0
+};
+cuentas.push(cuenta);
+cuentaActiva = cuentas.length -1;
+renderTabs();
+render();
 }
 
-function selectClient(index){
-selectedClient=index
-render()
+function renderTabs(){
+let html="";
+cuentas.forEach((c,i)=>{
+html+=`<div class="tab ${i===cuentaActiva?'active':''}" onclick="cambiarCuenta(${i})">
+Cuenta ${i+1}
+</div>`;
+});
+document.getElementById("tabs").innerHTML = html;
 }
 
-function addItem(name,price){
-if(selectedClient===null) return alert("Selecciona cliente")
-
-let c=clients[selectedClient]
-
-c.items.push({name,price})
-c.total+=price
-
-saveData()
-render()
+function cambiarCuenta(i){
+cuentaActiva = i;
+render();
+renderTabs();
 }
 
-function togglePaid(index){
+function addItem(nombre,precio){
+let cuenta = cuentas[cuentaActiva];
+let existente = cuenta.items.find(i=>i.nombre===nombre);
 
-let method = prompt("Metodo de pago: efectivo / transferencia")
-
-clients[index].paid=true
-clients[index].method=method
-
-saveData()
-render()
-renderHistory()
+if(existente){
+existente.cantidad++;
+}else{
+cuenta.items.push({nombre,precio,cantidad:1});
 }
 
-function editName(index){
-
-let newName=prompt("Nuevo nombre",clients[index].name)
-if(newName) clients[index].name=newName
-
-saveData()
-render()
+cuenta.total += precio;
+render();
 }
 
 function render(){
+let cuenta = cuentas[cuentaActiva];
+document.getElementById("clienteNombre").value = cuenta.cliente;
 
-let div=document.getElementById("clients")
-div.innerHTML=""
+let html="";
+cuenta.items.forEach((item,index)=>{
+html+=`
+<div class="item">
+<div>${item.cantidad}x ${item.nombre}</div>
+<div>$${item.precio * item.cantidad}</div>
+</div>
+`;
+});
 
-clients.forEach((c,i)=>{
+document.getElementById("ticket").innerHTML = html;
+document.getElementById("total").innerText = cuenta.total;
+}
 
-let el=document.createElement("div")
-el.className="client "+(c.paid?"paid":"")
+document.getElementById("clienteNombre").addEventListener("input",function(){
+cuentas[cuentaActiva].cliente = this.value;
+});
 
-el.innerHTML=`
-<b>${c.name}</b> 
-<button onclick="editName(${i})">✏️</button>
-<br>
+function cobrar(metodo){
 
-${c.items.map(it=>`• ${it.name} $${it.price}`).join("<br>")}
+let cuenta = cuentas[cuentaActiva];
 
-<br><span class="total">Total: $${c.total}</span>
-<br><span class="small">${c.paid?"Pagado ("+c.method+")":"Pendiente"}</span>
-<br>
+if(cuenta.total===0) return;
 
-<button onclick="selectClient(${i})">Seleccionar</button>
-<button onclick="togglePaid(${i})">Marcar Pagado</button>
-`
+guardarVenta(cuenta,metodo);
 
-div.appendChild(el)
+alert("Pagado con "+metodo+" — Total $"+cuenta.total);
 
-})
+cuentas.splice(cuentaActiva,1);
+
+if(cuentas.length===0) nuevaCuenta();
+else cuentaActiva=0;
+
+renderTabs();
+render();
 
 }
 
-function renderHistory(){
+function guardarVenta(cuenta,metodo){
 
-let div=document.getElementById("history")
+let historial = JSON.parse(localStorage.getItem("historialBirria")||"[]");
 
-let history=clients.filter(c=>c.paid)
+historial.push({
+cliente:cuenta.cliente,
+total:cuenta.total,
+metodo:metodo,
+fecha:new Date().toLocaleString()
+});
 
-div.innerHTML=history.map(h=>
-`<div>
-${h.date} - ${h.name} - $${h.total} (${h.method})
-</div>`
-).join("")
-}
-
-function clearHistory(){
-
-if(confirm("Borrar historial?")){
-
-clients=[]
-saveData()
-render()
-renderHistory()
+localStorage.setItem("historialBirria",JSON.stringify(historial));
 
 }
 
+function verHistorial(){
+
+let historial = JSON.parse(localStorage.getItem("historialBirria")||"[]");
+
+let texto="HISTORIAL:\n\n";
+
+historial.forEach(h=>{
+texto+=`${h.fecha} - ${h.cliente} - $${h.total} (${h.metodo})\n`;
+});
+
+alert(texto || "Sin ventas");
+
 }
 
-loadData()
+nuevaCuenta();
 
 </script>
-
 </body>
 </html>
+
+
+  
+
