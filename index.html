@@ -5,15 +5,16 @@
 <title>Birria Manager</title>
 
 <style>
+
 body{
- font-family: Arial;
+ font-family: Arial, sans-serif;
  margin:0;
- background:#121212;
+ background:#0f0f0f;
  color:white;
 }
 
 .header{
- background:#8B0000;
+ background:linear-gradient(90deg,#8B0000,#b30000);
  padding:15px;
  text-align:center;
  font-size:24px;
@@ -24,22 +25,39 @@ body{
  padding:15px;
 }
 
-button{
+input{
  padding:12px;
- margin:5px;
- font-size:16px;
- border:none;
+ font-size:18px;
+ width:100%;
  border-radius:10px;
+ border:none;
+ margin-bottom:10px;
+}
+
+button{
+ padding:15px;
+ margin:5px;
+ font-size:18px;
+ border:none;
+ border-radius:12px;
 }
 
 .product{
  background:#1f1f1f;
  color:white;
+ width:48%;
+}
+
+.actions{
+ background:#8B0000;
+ color:white;
+ width:48%;
 }
 
 .total{
- font-size:24px;
+ font-size:28px;
  margin-top:10px;
+ font-weight:bold;
 }
 
 .status{
@@ -47,22 +65,48 @@ button{
  font-size:18px;
 }
 
-.cuenta{
- background:#1f1f1f;
- padding:10px;
- margin:5px 0;
- border-radius:10px;
+.ticket{
+ background:#1c1c1c;
+ padding:15px;
+ border-radius:12px;
+ margin-top:15px;
 }
+
+.hidden{
+ display:none;
+}
+
+.login{
+ position:fixed;
+ top:0;
+ left:0;
+ right:0;
+ bottom:0;
+ background:#000;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ flex-direction:column;
+}
+
 </style>
 
 </head>
 <body>
 
+<div id="login" class="login">
+<h2>🔐 Birria Manager</h2>
+<input type="password" id="pass" placeholder="Contraseña">
+<button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" class="hidden">
+
 <div class="header">🌮 Birria Manager</div>
 
 <div class="container">
 
-<input id="cliente" placeholder="Nombre cliente" style="padding:10px;font-size:18px;width:100%;">
+<input id="cliente" placeholder="Nombre cliente">
 
 <h3>Productos</h3>
 
@@ -88,23 +132,33 @@ Estado: <span id="estado">Pendiente</span>
 
 <br>
 
-<button onclick="cobrar('Efectivo')">Cobrar Efectivo</button>
-<button onclick="cobrar('Transferencia')">Cobrar Transferencia</button>
-<button onclick="guardarCuenta()">Guardar Cuenta</button>
-<button onclick="reset()">Nueva Cuenta</button>
+<button class="actions" onclick="cobrar('Efectivo')">Efectivo</button>
+<button class="actions" onclick="cobrar('Transferencia')">Transferencia</button>
+<button class="actions" onclick="reset()">Nueva</button>
 
-<h3>Cuentas Guardadas</h3>
-<div id="cuentas"></div>
+<div id="ticket" class="ticket hidden"></div>
 
-<h3>Corte del Día</h3>
-<button onclick="verCorte()">Ver Corte</button>
-<div id="corte"></div>
+</div>
 
 </div>
 
 <script>
 
 let total = 0;
+let PASSWORD = "1234"; // ← puedes cambiarla
+
+function login(){
+
+ let p = document.getElementById("pass").value;
+
+ if(p === PASSWORD){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").classList.remove("hidden");
+ }else{
+  alert("Contraseña incorrecta");
+ }
+
+}
 
 function add(precio){
  total += precio;
@@ -115,10 +169,12 @@ function cobrar(metodo){
 
  document.getElementById("estado").innerText = "Pagado";
 
+ let cliente = document.getElementById("cliente").value;
+
  let ventas = JSON.parse(localStorage.getItem("ventas") || "[]");
 
  ventas.push({
- cliente: document.getElementById("cliente").value,
+ cliente: cliente,
  total: total,
  metodo: metodo,
  fecha: new Date().toLocaleDateString()
@@ -126,58 +182,24 @@ function cobrar(metodo){
 
  localStorage.setItem("ventas", JSON.stringify(ventas));
 
- alert("Pagado con " + metodo + " — Total $" + total);
+ mostrarTicket(cliente,metodo,total);
 
- reset();
 }
 
-function guardarCuenta(){
+function mostrarTicket(cliente,metodo,total){
 
- let cuentas = JSON.parse(localStorage.getItem("cuentas") || "[]");
+ let div = document.getElementById("ticket");
 
- cuentas.push({
- cliente: document.getElementById("cliente").value,
- total: total
- });
+ div.innerHTML = `
+  <h3>🧾 Ticket</h3>
+  Cliente: ${cliente}<br>
+  Total: $${total}<br>
+  Pago: ${metodo}<br>
+  ✅ Gracias por su compra
+ `;
 
- localStorage.setItem("cuentas", JSON.stringify(cuentas));
+ div.classList.remove("hidden");
 
- mostrarCuentas();
- reset();
-}
-
-function mostrarCuentas(){
-
- let cuentas = JSON.parse(localStorage.getItem("cuentas") || "[]");
-
- let html = "";
-
- cuentas.forEach((c,i)=>{
-  html += `
-   <div class="cuenta">
-    ${c.cliente} — $${c.total}
-    <button onclick="recuperar(${i})">Recuperar</button>
-   </div>
-  `;
- });
-
- document.getElementById("cuentas").innerHTML = html;
-}
-
-function recuperar(i){
-
- let cuentas = JSON.parse(localStorage.getItem("cuentas") || "[]");
-
- document.getElementById("cliente").value = cuentas[i].cliente;
- total = cuentas[i].total;
-
- document.getElementById("total").innerText = total;
-
- cuentas.splice(i,1);
-
- localStorage.setItem("cuentas", JSON.stringify(cuentas));
-
- mostrarCuentas();
 }
 
 function reset(){
@@ -185,42 +207,8 @@ function reset(){
  document.getElementById("total").innerText = total;
  document.getElementById("estado").innerText = "Pendiente";
  document.getElementById("cliente").value = "";
+ document.getElementById("ticket").classList.add("hidden");
 }
-
-function verCorte(){
-
- let ventas = JSON.parse(localStorage.getItem("ventas") || "[]");
-
- let hoy = new Date().toLocaleDateString();
-
- let totalDia = 0;
- let html = "";
-
- ventas.forEach(v=>{
-  if(v.fecha === hoy){
-   totalDia += v.total;
-   html += `${v.cliente} — $${v.total} (${v.metodo}) <br>`;
-  }
- });
-
- html += "<hr>Total del día: $" + totalDia;
- html += `<br><button onclick="eliminarDia('${hoy}')">Eliminar Día</button>`;
-
- document.getElementById("corte").innerHTML = html;
-}
-
-function eliminarDia(fecha){
-
- let ventas = JSON.parse(localStorage.getItem("ventas") || "[]");
-
- ventas = ventas.filter(v => v.fecha !== fecha);
-
- localStorage.setItem("ventas", JSON.stringify(ventas));
-
- verCorte();
-}
-
-mostrarCuentas();
 
 </script>
 
